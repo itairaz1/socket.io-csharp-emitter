@@ -88,9 +88,7 @@ namespace SocketIO.Emitter
         public IEmitter To(string room)
         {
             _rooms.Clear();
-
-            if (!_rooms.Contains(room))
-                _rooms.Add(room);
+            _rooms.Add(room);
 
             return this;
         }
@@ -98,12 +96,7 @@ namespace SocketIO.Emitter
         public IEmitter To(params string[] rooms)
         {
             _rooms.Clear();
-
-            foreach (var room in rooms)
-            {
-                if (!_rooms.Contains(room))
-                    _rooms.Add(room);
-            }
+            _rooms.AddRange(rooms.Select(r => r.Trim()).Distinct().ToList());
 
             return this;
         }
@@ -158,6 +151,7 @@ namespace SocketIO.Emitter
                     _redisClient.GetSubscriber().Publish(chn, msg);
                 }
             }
+
             _rooms.Clear();
             _flags.Clear();
 
@@ -212,6 +206,7 @@ namespace SocketIO.Emitter
                     await _redisClient.GetSubscriber().PublishAsync(chn, msg);
                 }
             }
+
             _rooms.Clear();
             _flags.Clear();
 
@@ -220,6 +215,9 @@ namespace SocketIO.Emitter
 
         private byte[] GetPackedMessage<T>(PacketObject<T> packet, Dictionary<string, object> data, string uid = null)
         {
+            log.Debug($"GetPackedMessage: uid={uid} packet={packet?.nsp}#{packet?.type}#{packet?.data?.Item1} {packet?.data?.Item2?.ToString()}");
+            log.Debug($"GetPackedMessage: data={(data != null ? string.Join("; ", data.Select(d => $"{d.Key}={d.Value?.ToString()}")) : "NONE")}");
+
             using (Stream stream = new MemoryStream())
             {
                 if (uid == null)
@@ -239,6 +237,9 @@ namespace SocketIO.Emitter
 
         private async Task<byte[]> GetPackedMessageAsync<T>(PacketObject<T> packet, Dictionary<string, object> data, string uid = null)
         {
+            log.Debug($"GetPackedMessageAsync: uid={uid} packet={packet?.nsp}#{packet?.type}#{packet?.data?.Item1} {packet?.data?.Item2?.ToString()}");
+            log.Debug($"GetPackedMessageAsync: data={(data != null ? string.Join("; ", data.Select(d => $"{d.Key}={d.Value?.ToString()}")) : "NONE")}");
+
             using (Stream stream = new MemoryStream())
             {
                 if (uid == null)
