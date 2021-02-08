@@ -5,7 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+
+[assembly: InternalsVisibleTo("SocketIO.Emitter.Tests")]
 
 namespace SocketIO.Emitter
 {
@@ -37,6 +40,7 @@ namespace SocketIO.Emitter
                 ctx = new SerializationContext() { SerializationMethod = SerializationMethod.Map };
                 ctx.Serializers.RegisterOverride(new IsoDateTimeSerializer(ctx));
                 ctx.Serializers.RegisterOverride(new IsoNullableDateTimeSerializer(ctx));
+                ctx.Serializers.RegisterOverride(new JObjectSerializer(ctx));
 
                 asyncSerializer = MessagePackSerializer.Get<object[]>(ctx);
             }
@@ -162,7 +166,6 @@ namespace SocketIO.Emitter
         {
             return arg != null && arg.GetType() == typeof(byte[]);
         }
-
         public async Task<IEmitter> EmitAsync(params object[] args)
         {
             return await EmitAsync((string)args[0], args[1]);
@@ -213,7 +216,7 @@ namespace SocketIO.Emitter
             return this;
         }
 
-        private byte[] GetPackedMessage<T>(PacketObject<T> packet, Dictionary<string, object> data, string uid = null)
+        internal byte[] GetPackedMessage<T>(PacketObject<T> packet, Dictionary<string, object> data, string uid = null)
         {
             log.Debug($"GetPackedMessage: uid={uid} packet={packet?.nsp}#{packet?.type}#{packet?.data?.Item1} {packet?.data?.Item2?.ToString()}");
             log.Debug($"GetPackedMessage: data={(data != null ? string.Join("; ", data.Select(d => $"{d.Key}={d.Value?.ToString()}")) : "NONE")}");
@@ -235,7 +238,7 @@ namespace SocketIO.Emitter
             }
         }
 
-        private async Task<byte[]> GetPackedMessageAsync<T>(PacketObject<T> packet, Dictionary<string, object> data, string uid = null)
+        internal async Task<byte[]> GetPackedMessageAsync<T>(PacketObject<T> packet, Dictionary<string, object> data, string uid = null)
         {
             log.Debug($"GetPackedMessageAsync: uid={uid} packet={packet?.nsp}#{packet?.type}#{packet?.data?.Item1} {packet?.data?.Item2?.ToString()}");
             log.Debug($"GetPackedMessageAsync: data={(data != null ? string.Join("; ", data.Select(d => $"{d.Key}={d.Value?.ToString()}")) : "NONE")}");

@@ -29,6 +29,7 @@ namespace SocketIO.Emitter
             {
                 return null;
             }
+
             return DateTime.Parse(unpacker.LastReadData.AsString(), null, System.Globalization.DateTimeStyles.RoundtripKind);
         }
     }
